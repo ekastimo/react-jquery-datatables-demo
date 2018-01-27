@@ -1,5 +1,4 @@
 import React from 'react'
-import moment from 'moment'
 import PropTypes from 'prop-types'
 import 'datatables.net-bs4/css/dataTables.bootstrap4.css'
 import 'datatables.net-responsive-dt/css/responsive.dataTables.css'
@@ -20,14 +19,13 @@ export default class XTable extends React.Component {
     static propTypes = {
         primaryKey: PropTypes.any.isRequired,
         data: PropTypes.array.isRequired,
-        config: PropTypes.object.isRequired,
+        columns: PropTypes.array.isRequired,
     }
 
     constructor(props) {
         super(props);
-        const {data, config} = props
-        this.data = data
-        this.columns = convertColumns(config.columns)
+        const {data} = props
+        this.data = data // User for internal manipulations
         this.datatable = undefined
     }
 
@@ -50,8 +48,9 @@ export default class XTable extends React.Component {
     }
 
     componentDidMount() {
+        const {columns} = this.props
         this.datatable = $(this.table).DataTable({
-            columns: this.columns,
+            columns: columns,
             data: this.data,
             autoWidth: false,
             responsive: responsiveConfig,
@@ -73,16 +72,9 @@ export default class XTable extends React.Component {
         }, 200)
     }
 
-
-
     render() {
         return (
-            <div style={{width: '100%'}}>
-                <div className='row row justify-content-md-center'>
-                    <div className='col-md-6 '>
-                        <button className='btn btn-sm btn-success' onClick={this._export}>Trigger</button>
-                    </div>
-                </div>
+            <div style={{width: '100%', padding: 5}}>
                 <table className="table table-striped table-bordered table-hover " cellSpacing="0"
                        style={{width: '100%'}}
                        ref={ref => {
@@ -160,7 +152,6 @@ export default class XTable extends React.Component {
         this.datatable.row.add(rec).draw()
     }
 
-
     printData = () => {
         this.datatable.button(0).trigger()
     }
@@ -180,59 +171,6 @@ export default class XTable extends React.Component {
     exportPDF = () => {
         this.datatable.button(4).trigger()
     }
-}
-
-const convertColumns = (columns = []) => {
-    return columns.map(({name, label, width, type, valueField, path}) => {
-        if (type === 'link')
-            return {
-                title: label,
-                width: width,
-                data: name,
-                defaultContent: '',
-                'render': function (data, type, row) {
-                    return `<a href='${row[valueField]}' target="_blank">${data}</a>`
-                }
-            }
-        else if (type === 'local-link') {
-            return {
-                title: label,
-                width: width,
-                data: name,
-                defaultContent: '',
-                'render': function (data, type, row) {
-                    return `<a href='#${path}/${row[valueField]}' >${data}</a>`
-                }
-            }
-        } else if (type === 'date') {
-            return {
-                title: label,
-                width: width,
-                data: name,
-                defaultContent: '',
-                'render': function (data, type, row) {
-                    return data ? moment(data).format('YYYY/MM/DD') : ''
-                }
-            }
-        } else if (type === 'date-time') {
-            return {
-                title: label,
-                width: width,
-                data: name,
-                defaultContent: '',
-                'render': function (data, type, row) {
-                    return data ? moment(data).format('YYYY/MM/DD hh:mm:ss') : ''
-                }
-            }
-        }
-        else
-            return {
-                title: label,
-                width: width,
-                data: name,
-                defaultContent: '',
-            }
-    })
 }
 
 const responsiveConfig = {
